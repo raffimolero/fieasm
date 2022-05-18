@@ -1,11 +1,11 @@
 pub mod header;
 pub mod register_cmd;
-pub mod rieline;
+pub mod rie_line;
 pub mod tm_cmd;
 
 use self::{
     header::{HeaderErr, HeaderFormat},
-    rieline::{RieLine, RieLineErr},
+    rie_line::{RieLine, RieLineErr},
     tm_cmd::TMCmd,
 };
 use crate::helpers::{break_string, extend_vec_to};
