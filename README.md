@@ -2,6 +2,10 @@
 
 A program that converts `.rie` files into RLEs to paste into Golly.
 
+# `.rie` File format
+
+todo
+
 # Usage
 
 1. make sure you have [Golly](https://sourceforge.net/projects/golly/files/) and [Rust](https://www.rust-lang.org/tools/install) installed.
