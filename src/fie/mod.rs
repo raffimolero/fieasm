@@ -47,7 +47,7 @@ impl FieProgram {
             .collect()
     }
 
-    pub fn build(&self) -> String {
+    pub fn rle(&self) -> String {
         let column_pairs = self.assemble();
 
         // create a vec of lines in the same format as a column

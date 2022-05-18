@@ -5,32 +5,47 @@ use crate::{
     fie::{FieErr, FieProgram},
     helpers::find_file,
 };
-use std::{env, io, path::PathBuf};
+use copypasta::{ClipboardContext, ClipboardProvider};
+use std::env;
 use thiserror::Error;
+
+const HELP_MSG: &'static str = "\
+Welcome to Fie!
+Usage:
+    cargo run <source> (--clip)
+
+Examples:
+    cargo run program --clip
+        Will find `program.fie` in your current directory, compile it into RLE, and put the RLE into your clipboard.
+
+    (WINDOWS)
+    cargo run program.fie > rom.rle
+        Will compile `program.fie` and output into `rom.rle`
+
+    (LINUX PROBABLY)
+    cargo run program.fie | rom.rle
+        Will compile `program.fie` and output into `rom.rle`
+
+Arguments:
+    <source>
+        The path to the `.fie` file containing source code.
+        The program will automatically append '.fie' to the path if it isn't already there.
+
+Flags:
+    --clip (or -c)
+        Whether to output directly to clipboard.
+        Otherwise uses standard output, meaning you have to pipe it to an rle file yourself.
+";
 
 type ClipErr = Box<dyn std::error::Error + Send + Sync>;
 
 #[derive(Error, Debug)]
 pub enum CLIErr {
-    #[error("No argument. Please specify a file to compile.")]
-    NoArgument,
-
     #[error("Could not find {0} inside target directory.")]
     FileNotFound(String),
 
-    #[error(
-        "Given a relative path, but could not find present working directory.\n\
-        Path: {1}\n\
-        IO Error: {0}"
-    )]
-    PWDNotFound(io::Error, PathBuf),
-
-    #[error(
-        "Could not write to file.\n\
-        Path: {1}\n\
-        IO Error: {0}"
-    )]
-    WriteFileErr(io::Error, PathBuf),
+    #[error("Invalid Second argument.")]
+    Invalid2ndArg(String),
 
     #[error(
         "Could not open clipboard.\n\
@@ -52,23 +67,44 @@ pub fn run_cli() -> Result<(), CLIErr> {
     use CLIErr::*;
 
     let mut args = env::args();
-    let exec_dir = args.next();
-    let mut filename = args.next().ok_or(NoArgument)?;
+    let executable_dir = args.next();
+    let arg = args.next().unwrap_or("--help".to_owned());
+    let output_to_clip = args.next().map_or(Ok(false), |arg| {
+        (arg == "--clip" || arg == "-c")
+            .then(|| true)
+            .ok_or_else(|| Invalid2ndArg(arg.to_owned()))
+    })?;
+
+    if arg == "--help" {
+        eprintln!("{HELP_MSG}");
+        return Ok(());
+    }
+    let mut filename = arg;
 
     // open fie file
     if !filename.ends_with(".fie") {
         filename.push_str(".fie");
     }
-    let file = find_file(&filename, exec_dir).ok_or_else(|| FileNotFound(filename.to_owned()))?;
+    let file =
+        find_file(&filename, executable_dir).ok_or_else(|| FileNotFound(filename.to_owned()))?;
 
-    // File -> IR -> RLE -> stdout
+    // File -> IR
     let program_ir = FieProgram::try_from(file)?;
     eprintln!("{program_ir}");
 
-    let rle = program_ir.build();
-    println!("{rle}");
+    // IR -> RLE
+    let rle = program_ir.rle();
 
-    eprintln!("Program successfully compiled.");
+    // RLE -> out
+    if output_to_clip {
+        let mut clip = ClipboardContext::new().map_err(OpenClipboardErr)?;
+        clip.set_contents(rle).map_err(WriteClipboardErr)?;
+        eprintln!("Program successfully compiled. Check your clipboard.");
+    } else {
+        println!("{rle}");
+        eprintln!("Program successfully compiled to standard output.");
+    }
+
     Ok(())
 }
 

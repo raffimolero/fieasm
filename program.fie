@@ -1,40 +1,46 @@
-// any line that doesn't start with a tab is a comment.
-// i would prefixing comments with something your syntax highlighter recognizes.
-// use tab width 8.
+# any line that doesn't start with a tab is a comment.
+# use tab width 8.
+
 	state	arg	jump	read	reg	reg	reg
-// demo register 0
-	0	false		true	%<
-	0	true	1	false	>
-	1	false			?
-	1	true	2	false	%
-	2	false		true	>
-	2	true	3		?
-	3	false		true	<
-	3	true	4	false
-// demo register 1
-	4	false		true		%<
-	4	true	5	false		>
-	5	false				?
-	5	true	6	false		%
-	6	false		true		>
-	6	true	7			?
-	7	false		true		<
-	7	true	8	false
-// demo register 2
-	8	false		true			%<
-	8	true	9	false			>
-	9	false					?
-	9	true	10	false			%
+
+# demo register 0
+	 0	false		true	%<
+	 0	true	1	false	>
+	 1	false			?
+	 1	true	2	false	%
+	 2	false		true	>
+	 2	true	3		?
+	 3	false		true	<
+	 3	true	4	false
+
+# demo register 1
+	 4	false		true		%<
+	 4	true	5	false		>
+	 5	false				?
+	 5	true	6	false		%
+	 6	false		true		>
+	 6	true	7			?
+	 7	false		true		<
+	 7	true	8	false
+
+# demo register 2
+	 8	false		true			%<
+	 8	true	9	false			>
+	 9	false					?
+	 9	true	10	false			%
 	10	false		true			>
 	10	true	11				?
 	11	false		true			<
 	11	true	12	false
-// demo all three registers at once
+
+# demo all three registers at once
 	12	false		true	%<	%<	%<
 	12	true	13	false	>	>	>
 	13	false		true	%	%	%
 	13	true	14	false	>	>	>
 	14	false		true	<	<	<
 	14	true	15	false
+
+# loop back to start
 	15	false		true
 	15	true	0	false
