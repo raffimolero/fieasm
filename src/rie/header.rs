@@ -22,7 +22,7 @@ pub enum HeaderErr {
     ExpectedHeader(String, String),
 
     #[error(
-        "This version of fieasm does not support the {0} header.\n\
+        "This version of rieasm does not support the {0} header.\n\
         The only valid headers are {}, and {}.",
         HeaderFormat::PRIMARY_HEADERS.join(", "),
         HeaderFormat::REGISTER_HEADER,

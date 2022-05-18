@@ -7,7 +7,7 @@ use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum FieLineErr {
+pub enum RieLineErr {
     #[error("No state specified.")]
     NoState,
 
@@ -48,17 +48,17 @@ pub enum FieLineErr {
     MultiRead(u32, bool),
 }
 
-pub struct FieLine {
+pub struct RieLine {
     pub state: u32,
     pub arg: bool,
     pub cmd: TMCmd,
 }
 
-impl FromStr for FieLine {
-    type Err = FieLineErr;
+impl FromStr for RieLine {
+    type Err = RieLineErr;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use FieLineErr::*;
+        use RieLineErr::*;
 
         let tokens = &mut get_tokens(s);
 

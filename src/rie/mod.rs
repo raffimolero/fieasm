@@ -1,11 +1,11 @@
-pub mod fieline;
 pub mod header;
 pub mod register_cmd;
+pub mod rieline;
 pub mod tm_cmd;
 
 use self::{
-    fieline::{FieLine, FieLineErr},
     header::{HeaderErr, HeaderFormat},
+    rieline::{RieLine, RieLineErr},
     tm_cmd::TMCmd,
 };
 use crate::helpers::{break_string, extend_vec_to};
@@ -17,7 +17,7 @@ use std::{
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum FieErr {
+pub enum RieErr {
     #[error("IO Error: {0}")]
     IO(#[from] io::Error),
 
@@ -28,15 +28,15 @@ pub enum FieErr {
     BadHeader(#[from] HeaderErr),
 
     #[error("Error on line {0}: {1}")]
-    BadLine(usize, FieLineErr),
+    BadLine(usize, RieLineErr),
 }
 
-pub struct FieProgram {
+pub struct RieProgram {
     commands: Vec<[TMCmd; 2]>,
     state_bits: u32,
     register_count: usize,
 }
-impl FieProgram {
+impl RieProgram {
     pub fn assemble(&self) -> Vec<[Vec<Vec<bool>>; 2]> {
         self.commands
             .iter()
@@ -122,11 +122,11 @@ impl FieProgram {
     }
 }
 
-impl TryFrom<File> for FieProgram {
-    type Error = FieErr;
+impl TryFrom<File> for RieProgram {
+    type Error = RieErr;
 
     fn try_from(value: File) -> Result<Self, Self::Error> {
-        use FieErr::*;
+        use RieErr::*;
 
         eprintln!("Compiling to IR...");
 
@@ -157,14 +157,14 @@ impl TryFrom<File> for FieProgram {
         for (i, line) in lines {
             let line = line?;
             if line.starts_with('\t') {
-                let FieLine { state, arg, cmd } = line.parse().map_err(|e| BadLine(i, e))?;
+                let RieLine { state, arg, cmd } = line.parse().map_err(|e| BadLine(i, e))?;
                 add_cmd(state, arg, cmd);
             }
         }
 
         let state_bits = usize::BITS - (commands.len() - 1).leading_zeros();
 
-        Ok(FieProgram {
+        Ok(RieProgram {
             commands,
             register_count,
             state_bits,
@@ -172,7 +172,7 @@ impl TryFrom<File> for FieProgram {
     }
 }
 
-impl Display for FieProgram {
+impl Display for RieProgram {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,

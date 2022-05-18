@@ -1,35 +1,35 @@
-mod fie;
 mod helpers;
+mod rie;
 
 use crate::{
-    fie::{FieErr, FieProgram},
     helpers::find_file,
+    rie::{RieErr, RieProgram},
 };
 use copypasta::{ClipboardContext, ClipboardProvider};
 use std::env;
 use thiserror::Error;
 
 const HELP_MSG: &'static str = "\
-Welcome to Fie!
+Welcome to Rie!
 Usage:
     cargo run <source> (--clip)
 
 Examples:
     cargo run program --clip
-        Will find `program.fie` in your current directory, compile it into RLE, and put the RLE into your clipboard.
+        Will find `program.rie` in your current directory, compile it into RLE, and put the RLE into your clipboard.
 
     (WINDOWS)
-    cargo run program.fie > rom.rle
-        Will compile `program.fie` and output into `rom.rle`
+    cargo run program.rie > rom.rle
+        Will compile `program.rie` and output into `rom.rle`
 
     (LINUX PROBABLY)
-    cargo run program.fie | rom.rle
-        Will compile `program.fie` and output into `rom.rle`
+    cargo run program.rie | rom.rle
+        Will compile `program.rie` and output into `rom.rle`
 
 Arguments:
     <source>
-        The path to the `.fie` file containing source code.
-        The program will automatically append '.fie' to the path if it isn't already there.
+        The path to the `.rie` file containing source code.
+        The program will automatically append '.rie' to the path if it isn't already there.
 
 Flags:
     --clip (or -c)
@@ -60,7 +60,7 @@ pub enum CLIErr {
     WriteClipboardErr(ClipErr),
 
     #[error("{0}")]
-    FieErr(#[from] FieErr),
+    RieErr(#[from] RieErr),
 }
 
 pub fn run_cli() -> Result<(), CLIErr> {
@@ -81,15 +81,15 @@ pub fn run_cli() -> Result<(), CLIErr> {
     }
     let mut filename = arg;
 
-    // open fie file
-    if !filename.ends_with(".fie") {
-        filename.push_str(".fie");
+    // open rie file
+    if !filename.ends_with(".rie") {
+        filename.push_str(".rie");
     }
     let file =
         find_file(&filename, executable_dir).ok_or_else(|| FileNotFound(filename.to_owned()))?;
 
     // File -> IR
-    let program_ir = FieProgram::try_from(file)?;
+    let program_ir = RieProgram::try_from(file)?;
     eprintln!("{program_ir}");
 
     // IR -> RLE
