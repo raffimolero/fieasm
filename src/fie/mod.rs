@@ -86,14 +86,14 @@ impl FieProgram {
                 for (bits, strings) in column.iter().zip(lines.iter_mut()) {
                     for (bit, string) in bits.iter().zip(strings.iter_mut()) {
                         string.push(if *bit { 'B' } else { 'C' });
-                        string.push_str(&format!(
-                            "{}.",
-                            if arg == 1 {
-                                PAIR_SPACING
-                            } else {
-                                COLUMN_SPACING
-                            }
-                        ));
+
+                        // TODO: do not add spacing if last column
+                        let gap = if arg == 1 {
+                            PAIR_SPACING
+                        } else {
+                            COLUMN_SPACING
+                        };
+                        string.push_str(&format!("{gap}.",));
                     }
                 }
             }
@@ -101,6 +101,7 @@ impl FieProgram {
 
         // off by one error nesting grounds
         // sanitized dw
+        // not like golly cares anyway
         let w = (column_pairs.len() * (1 + COLUMN_SPACING + 1 + PAIR_SPACING) - PAIR_SPACING)
             + ((row_count - 1) * ROW_OFFSET);
         let h = (segment_count * (SEGMENT_SPACING - ROW_SPACING)) + (row_count * (1 + ROW_SPACING))
@@ -126,6 +127,8 @@ impl TryFrom<File> for FieProgram {
 
     fn try_from(value: File) -> Result<Self, Self::Error> {
         use FieErr::*;
+
+        eprintln!("Compiling to IR...");
 
         let mut lines = BufReader::new(value)
             .lines()

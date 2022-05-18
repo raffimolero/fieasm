@@ -3,22 +3,22 @@ use std::{env, fs::File, iter::repeat, path::PathBuf, str::FromStr};
 use thiserror::Error;
 
 pub fn find_file(filename: &str, exec_dir: Option<String>) -> Option<File> {
-    println!("Searching for {filename}.");
+    eprintln!("Searching for {filename}.");
 
     macro_rules! try_dir {
         ($dir:expr, $variant:tt, $notfound:expr) => {
             if let $variant(dir) = $dir {
                 let mut dir = PathBuf::from(dir);
-                println!("Searching in {dir:?}...");
+                eprintln!("Searching in {dir:?}...");
                 dir.push(&filename);
                 if dir.is_file() {
-                    println!("Found.");
+                    eprintln!("Found.");
                     return Some(File::open(filename).expect("Could not open file."));
                 } else {
-                    println!("Not in {dir:?}.");
+                    eprintln!("Not in {dir:?}.");
                 }
             } else {
-                println!($notfound);
+                eprintln!($notfound);
             }
         };
     }
@@ -26,7 +26,7 @@ pub fn find_file(filename: &str, exec_dir: Option<String>) -> Option<File> {
     try_dir!(env::current_dir(), Ok, "Current dir not found.");
     try_dir!(exec_dir, Some, "Executable dir not found.");
 
-    println!("File not found.");
+    eprintln!("File not found.");
     None
 }
 
