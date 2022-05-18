@@ -16,7 +16,7 @@ TODO
 
    | ![image](https://user-images.githubusercontent.com/49224759/169102690-671830f1-47ef-4f2c-a58e-61fc94749c04.png) |
    |:--:|
-   | The Flow6 Turing Machine. |
+   | The Flow6 Turing Machine. It doesn't have a program yet. |
 
 4. Go back to your terminal and type `cargo run program --clip`. This will first compile the rieasm assembler, which will then run, compiling the `program.rie` file found in this repository into your clipboard.
    | ![image](https://user-images.githubusercontent.com/49224759/169112146-7200754b-b4c9-4317-bfb1-db79eb675fb6.png) |
