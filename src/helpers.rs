@@ -1,7 +1,5 @@
 use std::{env, fs::File, iter::repeat, path::PathBuf, str::FromStr};
 
-use thiserror::Error;
-
 pub fn find_file(filename: &str, exec_dir: Option<String>) -> Option<File> {
     eprintln!("Searching for {filename}.");
 
@@ -30,7 +28,7 @@ pub fn find_file(filename: &str, exec_dir: Option<String>) -> Option<File> {
     None
 }
 
-pub fn get_tokens<'a>(line: &'a str) -> impl Iterator<Item = &'a str> {
+pub fn get_tokens(line: &str) -> impl Iterator<Item = &str> {
     debug_assert!(
         line.starts_with(|c: char| c.is_whitespace()),
         "Tried to parse a comment as a line of code."

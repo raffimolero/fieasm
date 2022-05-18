@@ -59,7 +59,7 @@ pub fn run_cli() -> Result<(), CLIErr> {
     if !filename.ends_with(".fie") {
         filename.push_str(".fie");
     }
-    let file = find_file(&filename, exec_dir).ok_or(FileNotFound(filename.to_owned()))?;
+    let file = find_file(&filename, exec_dir).ok_or_else(|| FileNotFound(filename.to_owned()))?;
 
     // File -> IR -> RLE -> stdout
     let program_ir = FieProgram::try_from(file)?;

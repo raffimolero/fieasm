@@ -3,7 +3,7 @@ use crate::helpers::extend_vec_to;
 use super::register_cmd::RegisterCmd;
 use std::fmt::Display;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TMCmd {
     pub jump_mask: u32,
     pub read: Option<bool>,
@@ -33,16 +33,6 @@ impl TMCmd {
         out.push(jump_mask_bits);
 
         out
-    }
-}
-
-impl Default for TMCmd {
-    fn default() -> Self {
-        Self {
-            jump_mask: 0,
-            read: None,
-            register_cmds: vec![],
-        }
     }
 }
 
@@ -80,7 +70,7 @@ impl Display for TMCmd {
         if let Some(read) = self
             .read
             .map(|x| x.to_string())
-            .or(read_register_id.map(|x| format!("Register {x}")))
+            .or_else(|| read_register_id.map(|x| format!("Register {x}")))
         {
             instructions.push(format!("Read {read}"));
         }

@@ -56,6 +56,6 @@ impl FromStr for RegisterCmd {
             .iter()
             .find_map(|&(token, command)| (s == token).then(|| command))
             .or_else(|| s.is_empty().then(|| Noop))
-            .ok_or(BadRegisterCmd(s.to_owned()))
+            .ok_or_else(|| BadRegisterCmd(s.to_owned()))
     }
 }

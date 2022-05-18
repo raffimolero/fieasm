@@ -11,7 +11,7 @@ pub enum HeaderErr {
         HeaderFormat::PRIMARY_HEADERS.len(),
         HeaderFormat::PRIMARY_HEADERS.join(", "),
     )]
-    MissingHeader(String),
+    MissingHeaders(String),
 
     #[error(
         "Expected the {0:?} header, but got a header named {1:?}.\n\
@@ -52,7 +52,7 @@ impl FromStr for HeaderFormat {
             let actual = tokens.next();
             if actual != Some(expected) {
                 return Err(actual.map_or_else(
-                    || MissingHeader(expected.to_owned()),
+                    || MissingHeaders(expected.to_owned()),
                     |actual| ExpectedHeader(expected.to_owned(), actual.to_owned()),
                 ));
             }

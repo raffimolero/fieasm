@@ -62,7 +62,7 @@ impl FromStr for FieLine {
 
         let tokens = &mut get_tokens(s);
 
-        let state = next_token(tokens, |token| BadState(token))?.ok_or(NoState)?;
+        let state = next_token(tokens, BadState)?.ok_or(NoState)?;
         let arg = next_token(tokens, |token| BadArg(token, state))?.ok_or(NoArg(state))?;
         let jump = next_token(tokens, |token| BadJump(token, state, arg))?.unwrap_or(state);
         let read = next_token(tokens, |token| BadRead(token, state, arg))?;
