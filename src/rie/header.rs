@@ -35,7 +35,7 @@ pub struct HeaderFormat {
 }
 
 impl HeaderFormat {
-    pub const PRIMARY_HEADERS: [&'static str; 4] = ["state", "arg", "jump", "read"];
+    pub const PRIMARY_HEADERS: [&'static str; 4] = ["state", "arg", "goto", "read"];
     pub const REGISTER_HEADER: &'static str = "reg";
 }
 

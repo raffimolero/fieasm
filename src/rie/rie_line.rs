@@ -54,6 +54,53 @@ pub struct RieLine {
     pub cmd: TMCmd,
 }
 
+impl RieLine {
+    pub fn to_string(state_digits: usize, state: u32, arg: bool, cmd: &TMCmd) -> String {
+        let mut instructions = vec![];
+
+        // list goto address
+        if cmd.goto != state {
+            instructions.push(format!("Goto {:>state_digits$}", cmd.goto));
+        }
+
+        // which register this command reads from, if any
+        let mut read_register_id = None;
+
+        // list every register command
+        for (i, &cmd) in cmd
+            .register_cmds
+            .iter()
+            .filter(|&cmd| *cmd != RegisterCmd::Noop)
+            .enumerate()
+        {
+            if cmd == RegisterCmd::Read {
+                debug_assert_eq!(
+                    read_register_id, None,
+                    "A TMCmd somehow ended up having multiple reads."
+                );
+                read_register_id = Some(i);
+                continue;
+            }
+            instructions.push(format!("{cmd:?} Register {i}"));
+        }
+
+        // list which source to read from for the next command
+        if let Some(read) = cmd
+            .read
+            .map(|x| x.to_string())
+            .or_else(|| read_register_id.map(|x| format!("Register {x}")))
+        {
+            instructions.push(format!("Read {read}"));
+        }
+
+        // compile all instructions in the list
+        format!(
+            "State {state:>state_digits$} | {arg:<5} = {{ {} }}",
+            instructions.join(" | ")
+        )
+    }
+}
+
 impl FromStr for RieLine {
     type Err = RieLineErr;
 
@@ -64,7 +111,7 @@ impl FromStr for RieLine {
 
         let state = next_token(tokens, BadState)?.ok_or(NoState)?;
         let arg = next_token(tokens, |token| BadArg(token, state))?.ok_or(NoArg(state))?;
-        let jump = next_token(tokens, |token| BadJump(token, state, arg))?.unwrap_or(state);
+        let goto = next_token(tokens, |token| BadJump(token, state, arg))?.unwrap_or(state);
         let read = next_token(tokens, |token| BadRead(token, state, arg))?;
 
         let mut register_cmds = vec![];
@@ -88,7 +135,7 @@ impl FromStr for RieLine {
         }
 
         let cmd = TMCmd {
-            jump,
+            goto,
             read,
             register_cmds,
         };

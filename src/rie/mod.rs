@@ -188,8 +188,12 @@ impl Display for RieProgram {
         )?;
         let state_digits = ((1 << self.state_bits) as f32).log10() as usize + 1;
         for (state, [cmd0, cmd1]) in self.commands.iter().enumerate() {
-            writeln!(f, "State {state:>state_digits$} | false = {cmd0}")?;
-            writeln!(f, "State {state:>state_digits$} | true  = {cmd1}")?;
+            writeln!(
+                f,
+                "{}\n{}",
+                RieLine::to_string(state_digits, state as u32, false, cmd0),
+                RieLine::to_string(state_digits, state as u32, true, cmd1),
+            )?;
         }
         Ok(())
     }

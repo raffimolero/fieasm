@@ -4,7 +4,7 @@ A program that converts `.rie` files into RLEs to paste into Golly.
 
 # `.rie` File format
 
-todo
+TODO
 
 # Usage
 
