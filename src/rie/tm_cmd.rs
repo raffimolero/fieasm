@@ -1,11 +1,10 @@
-use crate::helpers::extend_vec_to;
-
 use super::register_cmd::RegisterCmd;
+use crate::helpers::extend_vec_to;
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Default)]
 pub struct TMCmd {
-    pub jump_mask: u32,
+    pub jump: u32,
     pub read: Option<bool>,
     pub register_cmds: Vec<RegisterCmd>,
 }
@@ -24,17 +23,19 @@ impl TMCmd {
         out.push(self.read.map_or(vec![false; 2], |bit| vec![!bit, bit]));
 
         // assemble jump mask
-        let mut mask = self.jump_mask;
-        let mut jump_mask_bits = vec![];
+        let mut mask = self.jump;
+        let mut jump_bits = vec![];
         for _ in 0..state_bit_count {
-            jump_mask_bits.push(mask & 1 == 1);
+            jump_bits.push(mask & 1 == 1);
             mask >>= 1;
         }
-        out.push(jump_mask_bits);
+        out.push(jump_bits);
 
         out
     }
 }
+
+// If you're looking for the FromStr implementation, go to rie_line.
 
 impl Display for TMCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -62,8 +63,8 @@ impl Display for TMCmd {
         }
 
         // list jump mask
-        if self.jump_mask != 0 {
-            instructions.push(format!("XOR state with 0b_{:b}", self.jump_mask));
+        if self.jump != 0 {
+            instructions.push(format!("Goto {}", self.jump));
         }
 
         // list which source to read from for the next command
@@ -76,6 +77,6 @@ impl Display for TMCmd {
         }
 
         // compile all instructions in the list
-        write!(f, "{}.", instructions.join(", "))
+        write!(f, "{{ {} }}", instructions.join(" | "))
     }
 }

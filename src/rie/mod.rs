@@ -81,8 +81,8 @@ impl RieProgram {
         const ROW_OFFSET: usize = 1;
 
         // extend each respective segment
-        for pair in column_pairs.iter().rev() {
-            for (arg, column) in pair.iter().rev().enumerate() {
+        for pair in column_pairs.iter() {
+            for (arg, column) in pair.iter().enumerate() {
                 for (bits, strings) in column.iter().zip(lines.iter_mut()) {
                     for (bit, string) in bits.iter().zip(strings.iter_mut()) {
                         string.push(if *bit { 'B' } else { 'C' });
@@ -163,6 +163,11 @@ impl TryFrom<File> for RieProgram {
         }
 
         let state_bits = usize::BITS - (commands.len() - 1).leading_zeros();
+        extend_vec_to(
+            &mut commands,
+            [TMCmd::default(), TMCmd::default()],
+            1 << state_bits,
+        );
 
         Ok(RieProgram {
             commands,
@@ -181,9 +186,10 @@ impl Display for RieProgram {
             self.state_bits + 1,
             self.register_count
         )?;
+        let state_digits = ((1 << self.state_bits) as f32).log10() as usize + 1;
         for (state, [cmd0, cmd1]) in self.commands.iter().enumerate() {
-            writeln!(f, "State {state:>3} | false = {cmd0}")?;
-            writeln!(f, "State {state:>3} | true  = {cmd1}")?;
+            writeln!(f, "State {state:>state_digits$} | false = {cmd0}")?;
+            writeln!(f, "State {state:>state_digits$} | true  = {cmd1}")?;
         }
         Ok(())
     }

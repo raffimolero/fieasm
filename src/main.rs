@@ -9,22 +9,28 @@ use copypasta::{ClipboardContext, ClipboardProvider};
 use std::env;
 use thiserror::Error;
 
-const HELP_MSG: &'static str = "\
+const HELP_MSG: &str = "\
 Welcome to Rie!
 Usage:
-    cargo run <source> (--clip)
+    cargo run (--help)
+    cargo run <source>(.rie) (--clip)
 
 Examples:
+    cargo run
+    cargo run --help
+        > Shows this message, hello user :)
+
     cargo run program --clip
-        Will find `program.rie` in your current directory, compile it into RLE, and put the RLE into your clipboard.
+        > Will find `program.rie` in your current directory, compile it into RLE, and put the RLE into your clipboard.
 
     (WINDOWS)
+    cargo run program > rom.rle
     cargo run program.rie > rom.rle
-        Will compile `program.rie` and output into `rom.rle`
-
     (LINUX PROBABLY)
+    cargo run program | rom.rle
     cargo run program.rie | rom.rle
-        Will compile `program.rie` and output into `rom.rle`
+
+        > Will compile `program.rie` and output into `rom.rle`
 
 Arguments:
     <source>
@@ -68,7 +74,7 @@ pub fn run_cli() -> Result<(), CLIErr> {
 
     let mut args = env::args();
     let executable_dir = args.next();
-    let arg = args.next().unwrap_or("--help".to_owned());
+    let arg = args.next().unwrap_or_else(|| "--help".to_owned());
     let output_to_clip = args.next().map_or(Ok(false), |arg| {
         (arg == "--clip" || arg == "-c")
             .then(|| true)

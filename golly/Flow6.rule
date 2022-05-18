@@ -1,0 +1,182 @@
+@RULE Flow6
+
+# May 19, 2022
+
+# An isotropic Moore rule that Redstoneboi designed to be Turing-complete
+#   and construction-universal (TCCU).  This rule's goal is to implement
+#   logic and construction operations that are smaller and faster than
+#   that of Hutton32 and Devore  while using only 6 states, having
+#   signals of any length flowing through wires. Hence the name: Flow6.
+
+# This rule contains many features such as:
+#   extensible and resettable signals,
+#   wires and splitters,
+#   AND, XOR and OR gates,
+#   crossovers,
+#   and construction arm operations including:
+#     extend,
+#     toggle then retract,
+#     turn 90 degrees towards the bend,
+#     and scan.
+# You can find all these mechanics in "Flow6/Demo/Features.mc".
+
+@TABLE
+n_states:6
+neighborhood:Moore
+symmetries:rotate4reflect
+
+var a{0,1,2,3,4,5}
+var b=a
+var c=a
+var d=a
+var e=a
+var f=a
+var g=a
+var h=a
+
+var j{0,1,2,3,4}
+var k=j
+
+var w{1,2}
+var wa=w
+
+var t{0,1,3}
+var ta=t
+var tb=t
+
+var s{0,3}
+var sa=s
+
+var r{2,5}
+var v{1,5}
+var i{0,2}
+
+#SPACE
+#turn
+0,0,4,4,2,5,5,5,2,3
+0,3,5,0,d,e,f,g,0,3
+0,5,3,0,d,e,f,0,0,3
+
+0,1,5,5,5,s,f,0,0,3
+#0,5,5,5,2,0,f,0,0,3
+#retract
+0,0,4,4,2,5,5,2,0,3
+0,4,4,0,1,2,5,5,2,3
+0,4,3,0,d,e,f,0,0,4
+0,5,5,2,1,e,f,0,0,3
+#extend
+0,5,2,0,d,e,f,0,i,3
+0,0,3,2,5,e,f,g,h,3
+#construction
+0,4,4,c,d,e,f,g,h,0
+0,4,0,c,d,e,f,g,0,1
+
+#WIRE
+#reset
+1,0,5,5,5,2,5,0,h,2
+#read
+#destruction
+1,4,0,c,d,e,f,g,0,0
+#retract
+1,4,4,0,1,1,1,1,0,0
+#diode
+1,s,5,t,5,sa,f,g,h,5
+#crossxor
+1,5,1,5,ta,w,f,wa,tb,1
+#crossover
+1,3,r,t,d,e,f,ta,1,5
+1,5,t,5,ta,w,f,wa,tb,3
+1,5,r,s,j,5,k,sa,v,5
+1,5,r,s,d,e,f,sa,v,1
+#solid state catch
+1 0,5,0,d,0,f,0,h 2
+#basic
+1,5,b,5,d,e,f,g,h,1
+1,5,b,c,d,e,f,g,h,5
+
+#TAIL
+#turn
+2,4,3,5,0,0,f,g,h,3
+2,0,3,0,3,1,0,5,0,5
+#retract
+2,3,0,1,3,4,0,0,0,2
+2,5,5,4,d,e,f,g,h,2
+2,4,b,c,d,e,f,g,h,0
+#reset
+2,1,5,c,5,1,0,5,0,2
+#extend
+2,3,3,1,d,0,f,0,0,0
+#solid state catch
+2 0,2,0,d,0,f,0,h 5
+#basic
+2,a,b,c,d,e,f,g,h,1
+
+#SPECIAL
+#bugs
+3,3,2,0,1,2,0,0,0,0
+3,3,0,2,1,0,f,0,0,0
+#read
+3,5,5,5,5,0,0,0,0,4
+3,3,5,4,0,0,f,g,h,0
+3,3,4,5,0,0,f,g,h,0
+#turn
+3,4,2,1,5,5,5,0,0,3
+#connect
+3,3,1,t,d,e,f,i,v,0
+#3,3,2,0,0,e,f,g,1,0
+#3,3,1,2,0,e,f,g,1,0
+#retract
+3,4,2,1,v,0,t,0,0,1
+3,2,1,1,0,0,0,0,0,4
+#crossover
+3,5,b,5,d,v,f,v,h,3
+3,2,b,2,d,v,f,v,h,2
+#extend
+3,3,b,c,d,e,f,g,h,1
+#basic
+3,a,b,c,d,e,f,g,h,0
+
+#TOGGLER
+#read
+4,3,3,5,5,5,2,0,0,4
+#turn
+4,4,0,3,5,2,f,g,h,3
+#basic
+4,2,1,3,0,0,0,0,0,4
+4,a,b,c,d,e,f,g,h,0
+
+#SIGNAL
+#read
+5,5,4,2,0,0,0,0,0,1
+5,5,2,4,0,0,3,0,0,1
+#destruction
+5,4,0,c,d,e,f,g,0,0
+#reset
+5,1,5,5,5,1,0,1,0,2
+#turn
+5,2,4,3,5,5,0,0,0,5
+5,3,3,0,2,5,0,0,0,2
+5,5,3,2,0,0,0,0,0,5
+5,5,2,3,0,0,0,0,0,2
+#retract
+5,2,4,0,2,5,0,0,0,4
+5,2,4,1,0,5,0,0,0,5
+5,0,0,0,0,0,0,5,2,4
+#extend
+5,0,0,0,0,0,0,2,1,2
+#solid state catch and release
+5 0,2,0,d,0,f,0,h 1
+5 0,b,0,d,0,f,0,h 5
+#basic
+5,0,r,0,r,0,f,g,h,r
+5,r,b,c,d,e,f,g,h,r
+5,3,r,c,d,e,f,g,h,5
+5,a,b,c,d,e,f,g,h,2
+
+@COLORS
+0 000 000 000
+1 255 000 000
+2 192 096 096
+3 128 064 064
+4 064 032 032
+5 000 255 255

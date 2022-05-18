@@ -88,7 +88,7 @@ impl FromStr for RieLine {
         }
 
         let cmd = TMCmd {
-            jump_mask: jump ^ state,
+            jump,
             read,
             register_cmds,
         };
