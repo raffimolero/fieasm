@@ -64,8 +64,8 @@ impl RieLine {
         for (i, &cmd) in cmd
             .register_cmds
             .iter()
-            .filter(|&cmd| *cmd != RegisterCmd::Noop)
             .enumerate()
+            .filter(|&(_i, cmd)| *cmd != RegisterCmd::Noop)
         {
             if cmd == RegisterCmd::Read {
                 debug_assert_eq!(
