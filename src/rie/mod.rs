@@ -8,12 +8,15 @@ use self::{
     rie_line::{RieLine, RieLineErr},
     tm_cmd::TMCmd,
 };
-use crate::helpers::{break_string, extend_vec_to};
+use crate::helpers::{
+    ask_y_n, break_string, extend_vec_to, largest_bit, pause, RED, RESET, YELLOW,
+};
 use std::{
     fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader},
 };
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -29,6 +32,9 @@ pub enum RieErr {
 
     #[error("Error on line {0}: {1}")]
     BadLine(usize, RieLineErr),
+
+    #[error("Cancelled compilation.")]
+    Cancelled,
 }
 
 pub struct RieProgram {
@@ -37,6 +43,10 @@ pub struct RieProgram {
     register_count: usize,
 }
 impl RieProgram {
+    pub fn len(&self) -> usize {
+        self.commands.len() * 2
+    }
+
     pub fn assemble(&self) -> Vec<[Vec<Vec<bool>>; 2]> {
         self.commands
             .iter()
@@ -143,26 +153,55 @@ impl TryFrom<File> for RieProgram {
         let (_i, line) = lines.next().ok_or(NoHeader)?;
         let HeaderFormat { register_count } = line?.parse::<HeaderFormat>()?;
 
+        let mut warning_size = 1 << 6;
         let mut commands = vec![];
-        let mut add_cmd = |state: u32, arg: bool, tm_cmd: TMCmd| {
+        let mut add_cmd = |line: usize,
+                           state: u32,
+                           arg: bool,
+                           tm_cmd: TMCmd|
+         -> Result<(), RieErr> {
+            let extension = state.max(tm_cmd.goto) as usize;
+
+            if extension > warning_size {
+                let total_cmds = 2 << largest_bit(extension);
+                eprintln!(
+                    "{RED}WAIT!{RESET}\n\
+                    The program is trying to create at least {RED}{total_cmds} instructions.{RESET}\n\
+                    This is coming from line {line}, which specifies that state {state} must goto {}.\n\
+                    Are you sure you want a machine with that many instructions? I will notify you if it goes beyond another power of two.",
+                    tm_cmd.goto
+                );
+                if !ask_y_n() {
+                    return Err(Cancelled);
+                }
+                eprintln!("Continuing...");
+                warning_size = total_cmds >> 1;
+            }
+
             // each state becomes 2 commands: one with arg false and one with arg true.
-            extend_vec_to(
+            if extend_vec_to(
                 &mut commands,
                 [TMCmd::default(), TMCmd::default()],
-                state as usize + 1,
-            );
+                extension + 1,
+            ) == 0
+            {
+                eprintln!("{YELLOW}Warning: Lines out of order. Line {line} should probably come earlier.{RESET}");
+                pause();
+            }
             commands[state as usize][arg as usize] = tm_cmd;
+
+            Ok(())
         };
 
         for (i, line) in lines {
             let line = line?;
             if line.starts_with('\t') {
                 let RieLine { state, arg, cmd } = line.parse().map_err(|e| BadLine(i, e))?;
-                add_cmd(state, arg, cmd);
+                add_cmd(i, state, arg, cmd)?;
             }
         }
 
-        let state_bits = usize::BITS - (commands.len() - 1).leading_zeros();
+        let state_bits = largest_bit(commands.len() - 1);
         extend_vec_to(
             &mut commands,
             [TMCmd::default(), TMCmd::default()],

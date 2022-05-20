@@ -2,11 +2,12 @@ mod helpers;
 mod rie;
 
 use crate::{
-    helpers::find_file,
+    helpers::{ask_y_n, find_file, pause, GREEN, RED, RESET, YELLOW},
     rie::{RieErr, RieProgram},
 };
-use copypasta::{ClipboardContext, ClipboardProvider};
 use std::env;
+
+use copypasta::{ClipboardContext, ClipboardProvider};
 use thiserror::Error;
 
 const HELP_MSG: &str = "\
@@ -50,8 +51,8 @@ pub enum CLIErr {
     #[error("Could not find {0} inside target directory.")]
     FileNotFound(String),
 
-    #[error("Invalid Second argument.")]
-    Invalid2ndArg(String),
+    #[error("Invalid flag: {0}")]
+    InvalidFlag(String),
 
     #[error(
         "Could not open clipboard.\n\
@@ -78,7 +79,7 @@ pub fn run_cli() -> Result<(), CLIErr> {
     let output_to_clip = args.next().map_or(Ok(false), |arg| {
         (arg == "--clip" || arg == "-c")
             .then(|| true)
-            .ok_or_else(|| Invalid2ndArg(arg.to_owned()))
+            .ok_or_else(|| InvalidFlag(arg.to_owned()))
     })?;
 
     if arg == "--help" {
@@ -96,19 +97,29 @@ pub fn run_cli() -> Result<(), CLIErr> {
 
     // File -> IR
     let program_ir = RieProgram::try_from(file)?;
-    eprintln!("{program_ir}");
+    eprintln!("{GREEN}Program successfully parsed.{RESET}");
 
-    // IR -> RLE
+    eprintln!("Would you like to view the program's representation?");
+    eprintln!("({YELLOW}{} lines of code{RESET})", program_ir.len());
+    if ask_y_n() {
+        for (i, line) in program_ir.to_string().split('\n').enumerate() {
+            eprintln!("{line}");
+            if i % 8 == 0 {
+                pause()
+            }
+        }
+    }
+
+    // IR -> RLE -> out
     let rle = program_ir.rle();
-
-    // RLE -> out
+    eprintln!("{GREEN}Program successfully compiled.{RESET}");
     if output_to_clip {
         let mut clip = ClipboardContext::new().map_err(OpenClipboardErr)?;
         clip.set_contents(rle).map_err(WriteClipboardErr)?;
-        eprintln!("Program successfully compiled. Check your clipboard.");
+        eprintln!("(Check your clipboard)");
     } else {
         println!("{rle}");
-        eprintln!("Program successfully compiled to standard output.");
+        eprintln!("RLE sent to standard output.");
     }
 
     Ok(())
@@ -116,8 +127,6 @@ pub fn run_cli() -> Result<(), CLIErr> {
 
 fn main() {
     if let Err(e) = run_cli() {
-        let red = "\x1b[0;31m";
-        let default = "\x1b[0m";
-        eprintln!("{red}Error: {e}{default}");
+        eprintln!("{RED}Error: {e}{RESET}");
     }
 }

@@ -1,11 +1,11 @@
-# any line that doesn't start with a tab is a comment.
-# use tab width 8.
+-- any line that doesn't start with a tab is a comment.
+-- use tab width 8.
 
-# each program starts with a header.
-# the first 4 must come in exact order, followed by however many register headers.
+-- each program starts with a header.
+-- the first 4 must come in exact order, followed by however many register headers.
 	state	arg	goto	read	reg	reg	reg
 
-# demo register 0
+-- demo register 0
 	 0	false		true	%<
 	 0	true	1	false	>
 	 1	false			?
