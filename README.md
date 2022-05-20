@@ -93,7 +93,7 @@ A program that converts `.rie` files into RLEs to paste into Golly.
 
 ---
 
-<details open>
+<details>
 <summary>File format</summary>
 Lines of code are just tabs followed by tokens. It's pretty much like a `.csv` file but with tabs instead of commas.
 
