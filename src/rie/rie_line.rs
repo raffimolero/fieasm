@@ -3,7 +3,6 @@ use super::{
     tm_cmd::TMCmd,
 };
 use crate::helpers::{get_tokens, next_token};
-use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -118,14 +117,13 @@ impl RieLine {
             );
         }
 
-        // check if there are multiple reads
-        if register_cmds
+        let read_count = register_cmds
             .iter()
             .filter(|&cmd| *cmd == RegisterCmd::Read)
             .count()
-            + read.is_some() as usize
-            > 1
-        {
+            + read.is_some() as usize;
+
+        if read_count > 1 {
             return Err(MultiRead(state, arg));
         }
 
