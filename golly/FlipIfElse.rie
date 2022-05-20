@@ -17,17 +17,32 @@
 	1	false	0		>		?
 	1	true	2				?
 -- jump mem
-	2	false	3	false	%	<	<
+	2	false	3	false	%	<	<	-- set the program register to indicate negative jump
 	2	true	3	true		>	%<
 	3	false	4			>	?
 	3	true	4			<	?
-	4	false	5		?	%
+	4	false	5		?	%	%<	-- jumps exhausted, break loop and set jump prog temp bit
 	4	true	3		?		%<
 -- read mem
-	5	false	6		%	?
-	5	true	6			?
-	6	false
-	6	true
+	5	false	6		%	?	%	-- fix program and jump prog fence
+	5	true	6			?	%
+	6	false	7	false	>			-- else
+	6	true	8	true	>		>	-- skip loop break and set temp alignment
+-- skip if
+	7	false	6		?
+-- add jumps
+	7	true	10	false			>
+-- jump prog
+	8	false	7	true			>
+	8	true	9		?		%
+	9	false	8		>		?
+	9	true	11				?
+	10	false		true			>
+	10	true	9		?		%
+
+-- TODO: skip jump
+	11	false		false
+	11	true		true
 
 
 
