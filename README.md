@@ -125,7 +125,10 @@ As mentioned earlier for all `.rie` code, every token is preceded with tabs, as 
 Every valid line after the header must now stick to the format specified by the header:
 
 - `state` is required. It must be a nonnegative integer, and is what `goto` looks for.
-- `arg` is also required. It is paired with state w
+- `arg` is also required. It is always paired with state, and is what `read` and `reg '?'` look for.
+- `goto` defaults to the same value as `state`.
+
+- anything after the last `reg` is a comment.
 
 TODO
 

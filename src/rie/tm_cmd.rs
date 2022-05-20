@@ -14,6 +14,7 @@ impl TMCmd {
         let mut out = self
             .register_cmds
             .iter()
+            .rev()
             .map(|cmd| cmd.assemble().to_vec())
             .collect();
         extend_vec_to(&mut out, vec![false; 4], register_count);

@@ -8,7 +8,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum RieLineErr {
-    #[error("No state specified.")]
+    #[error("There was a tab, indicating a real line, but no state was specified.")]
     NoState,
 
     #[error("Could not parse the 'state' ({0}).")]
@@ -99,23 +99,18 @@ impl RieLine {
             instructions.join(" | ")
         )
     }
-}
 
-impl FromStr for RieLine {
-    type Err = RieLineErr;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    pub fn parse(line: &str, register_count: usize) -> Result<Self, RieLineErr> {
         use RieLineErr::*;
 
-        let tokens = &mut get_tokens(s);
-
+        let tokens = &mut get_tokens(line);
         let state = next_token(tokens, BadState)?.ok_or(NoState)?;
         let arg = next_token(tokens, |token| BadArg(token, state))?.ok_or(NoArg(state))?;
         let goto = next_token(tokens, |token| BadJump(token, state, arg))?.unwrap_or(state);
-        let read = next_token(tokens, |token| BadRead(token, state, arg))?;
+        let mut read = next_token(tokens, |token| BadRead(token, state, arg))?;
 
         let mut register_cmds = vec![];
-        for (i, token) in tokens.enumerate() {
+        for (i, token) in (0..register_count).zip(tokens) {
             register_cmds.push(
                 token
                     .parse::<RegisterCmd>()

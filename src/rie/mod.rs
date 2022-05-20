@@ -154,6 +154,7 @@ impl TryFrom<File> for RieProgram {
         let HeaderFormat { register_count } = line?.parse::<HeaderFormat>()?;
 
         let mut warning_size = 1 << 6;
+        let mut highest_state = 0;
         let mut commands = vec![];
         let mut add_cmd = |line: usize,
                            state: u32,
@@ -178,16 +179,16 @@ impl TryFrom<File> for RieProgram {
                 warning_size = total_cmds >> 1;
             }
 
-            // each state becomes 2 commands: one with arg false and one with arg true.
-            if extend_vec_to(
-                &mut commands,
-                [TMCmd::default(), TMCmd::default()],
-                extension + 1,
-            ) == 0
-            {
+            if highest_state > state {
                 eprintln!("{YELLOW}Warning: Lines out of order. Line {line} should probably come earlier.{RESET}");
                 pause();
             }
+            highest_state = state;
+            extend_vec_to(
+                &mut commands,
+                [TMCmd::default(), TMCmd::default()],
+                extension + 1,
+            );
             commands[state as usize][arg as usize] = tm_cmd;
 
             Ok(())
@@ -196,7 +197,8 @@ impl TryFrom<File> for RieProgram {
         for (i, line) in lines {
             let line = line?;
             if line.starts_with('\t') {
-                let RieLine { state, arg, cmd } = line.parse().map_err(|e| BadLine(i, e))?;
+                let RieLine { state, arg, cmd } =
+                    RieLine::parse(&line, register_count).map_err(|e| BadLine(i, e))?;
                 add_cmd(i, state, arg, cmd)?;
             }
         }
