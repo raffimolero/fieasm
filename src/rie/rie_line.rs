@@ -106,7 +106,7 @@ impl RieLine {
         let state = next_token(tokens, BadState)?.ok_or(NoState)?;
         let arg = next_token(tokens, |token| BadArg(token, state))?.ok_or(NoArg(state))?;
         let goto = next_token(tokens, |token| BadJump(token, state, arg))?.unwrap_or(state);
-        let mut read = next_token(tokens, |token| BadRead(token, state, arg))?;
+        let read = next_token(tokens, |token| BadRead(token, state, arg))?;
 
         let mut register_cmds = vec![];
         for (i, token) in (0..register_count).zip(tokens) {
