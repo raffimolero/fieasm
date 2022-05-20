@@ -55,12 +55,7 @@ pub struct RieLine {
 
 impl RieLine {
     pub fn to_string(state_digits: usize, state: u32, arg: bool, cmd: &TMCmd) -> String {
-        let mut instructions = vec![];
-
-        // list goto address
-        if cmd.goto != state {
-            instructions.push(format!("Goto {}", cmd.goto));
-        }
+        let mut instructions = vec![format!("Goto {:>state_digits$}", cmd.goto)];
 
         // which register this command reads from, if any
         let mut read_register_id = None;

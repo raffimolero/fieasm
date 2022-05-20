@@ -18,9 +18,11 @@
 	1	true	2				?
 -- jump mem
 -- is_negative = arg
-	2	false					?
-	2	true					?
-	3	false				
+	2	false	3				<
+	2	true	3				%<
+
+	3	false	
+	3	true				
 
 -- --	1 true is negative
 -- 	1	false	2				>
