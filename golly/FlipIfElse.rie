@@ -17,12 +17,19 @@
 	1	false	0		>		?
 	1	true	2				?
 -- jump mem
--- is_negative = arg
-	2	false	3				<
-	2	true	3				%<
+	2	false	3	false	%	<	<
+	2	true	3	true		>	%<
+	3	false	4			>	?
+	3	true	4			<	?
+	4	false	5		?	%
+	4	true	3		?		%<
+-- read mem
+	5	false	6		%	?
+	5	true	6			?
+	6	false
+	6	true
 
-	3	false	
-	3	true				
+
 
 -- --	1 true is negative
 -- 	1	false	2				>
