@@ -154,7 +154,7 @@ impl TryFrom<File> for RieProgram {
         let HeaderFormat { register_count } = line?.parse::<HeaderFormat>()?;
 
         let mut warning_size = 1 << 6;
-        let mut highest_state = 0;
+        // let mut highest_state = 0;
         let mut commands = vec![];
         let mut add_cmd = |line: usize,
                            state: u32,
@@ -179,11 +179,13 @@ impl TryFrom<File> for RieProgram {
                 warning_size = total_cmds >> 1;
             }
 
+            /*
             if highest_state > state {
                 eprintln!("{YELLOW}Warning: Lines out of order. Line {line} should probably come earlier.{RESET}");
                 pause();
             }
             highest_state = state;
+            */
             extend_vec_to(
                 &mut commands,
                 [TMCmd::default(), TMCmd::default()],
