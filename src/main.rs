@@ -48,7 +48,10 @@ type ClipErr = Box<dyn std::error::Error + Send + Sync>;
 
 #[derive(Error, Debug)]
 pub enum CLIErr {
-    #[error("Could not find {0} inside target directory.")]
+    #[error(
+        "Could not find {0} inside target directory.\n\
+        {YELLOW}Please open a .rie file.{RESET}"
+    )]
     FileNotFound(String),
 
     #[error("Invalid flag: {0}")]
