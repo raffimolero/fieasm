@@ -1,17 +1,18 @@
--- a script i used within golly to quickly compile a rie file *into clipboard*
--- and paste the output from the clipboard right into the Turing Machine's ROM
-
--- open golly/FlipIfElse.mc (MC, not RIE) or 
--- then open/run this script through Golly itself
--- it should open up a terminal showing the compiler output
--- just press enter when it appears, or something
-
 ------------------------------------------
+--[[ description
+
+a script i used within golly to quickly compile a rie file *into clipboard*
+and paste the output from the clipboard right into the Turing Machine's ROM
+
+open golly/FlipIfElse.mc (MC, not RIE) or 
+then open/run this script through Golly itself
+it should open up a terminal showing the compiler output
+just press enter when it appears, or something
+
+----------------------------------------]]
 -- setup
 
 local g = golly()
-local rie = g.opendialog()
-if #rie == 0 then g.exit("Cancelled.") end
 
 ------------------------------------------
 -- helpers
@@ -46,6 +47,10 @@ end
 
 ------------------------------------------
 -- begin
+
+show "Which .rie file should I compile?" 
+local rie = g.opendialog()
+if #rie == 0 then g.exit("Cancelled.") end
 
 show "Finding Pattern..." 
 local x, y = rom_location()
