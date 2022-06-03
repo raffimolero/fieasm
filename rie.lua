@@ -31,7 +31,7 @@ end
 -- begin
 
 show "Compiling..."
-os.execute("cargo run "..rie.." --clip")
+os.execute("cargo run --release "..rie.." --clip")
 
 show "Finding Pattern..." 
 local x, y = rom_location()
@@ -39,6 +39,6 @@ show "Pattern found. Assuming it is a turing machine without question."
 
 show "Pasting..."
 g.paste(x, y, "or")
-show "Pasted. Run pattern at 2^8 or 8^3."
+show "Pasted. Run pattern at 8^2 or faster."
 
 -- show(logs)
