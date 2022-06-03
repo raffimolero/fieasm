@@ -13,12 +13,12 @@ use thiserror::Error;
 const HELP_MSG: &str = "\
 Welcome to Rie!
 Usage:
-    cargo run (--help)
+    cargo run (help)
     cargo run <source>(.rie) (--clip)
 
 Examples:
     cargo run
-    cargo run --help
+    cargo run help
         > Shows this message, hello user :)
 
     cargo run program --clip
@@ -75,14 +75,14 @@ pub fn run_cli() -> Result<(), CLIErr> {
 
     let mut args = env::args();
     let executable_dir = args.next();
-    let arg = args.next().unwrap_or_else(|| "--help".to_owned());
+    let arg = args.next().unwrap_or_else(|| "help".to_owned());
     let output_to_clip = args.next().map_or(Ok(false), |arg| {
         (arg == "--clip" || arg == "-c")
             .then(|| true)
             .ok_or_else(|| InvalidFlag(arg.to_owned()))
     })?;
 
-    if arg == "--help" {
+    if arg == "help" {
         eprintln!("{HELP_MSG}");
         return Ok(());
     }
@@ -111,16 +111,16 @@ pub fn run_cli() -> Result<(), CLIErr> {
         eprintln!("RLE sent to standard output.");
     }
 
-    eprintln!("Would you like to view the program's representation?");
-    eprintln!("({YELLOW}{} lines of code{RESET})", program_ir.len());
-    if ask_y_n() {
-        for (i, line) in program_ir.to_string().split('\n').enumerate() {
-            eprintln!("{line}");
-            if i % 8 == 0 {
-                pause()
-            }
-        }
-    }
+    // eprintln!("Would you like to view the program's representation?");
+    // eprintln!("({YELLOW}{} lines of code{RESET})", program_ir.len());
+    // if ask_y_n() {
+    //     for (i, line) in program_ir.to_string().split('\n').enumerate() {
+    //         eprintln!("{line}");
+    //         if i % 8 == 0 {
+    //             pause()
+    //         }
+    //     }
+    // }
 
     Ok(())
 }
@@ -128,5 +128,6 @@ pub fn run_cli() -> Result<(), CLIErr> {
 fn main() {
     if let Err(e) = run_cli() {
         eprintln!("{RED}Error: {e}{RESET}");
+        pause();
     }
 }
