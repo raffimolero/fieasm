@@ -17,12 +17,6 @@ local g = golly()
 ------------------------------------------
 -- helpers
 
--- -- unused
--- local logs = ""
--- function log(thing)
--- 	logs = logs..tostring(thing)..' '
--- end
-
 local function show(s)
 	g.show(s)
 	g.update()
@@ -50,9 +44,11 @@ end
 
 show "Which .rie file should I compile?" 
 local rie = g.opendialog()
-if #rie == 0 then g.exit("Cancelled.") end
+if #rie == 0 then
+	g.exit("Cancelled.")
+end
 
-show "Finding Pattern..." 
+show "Finding Paste Location..." 
 local x, y = rom_location()
 
 show "Compiling..."
@@ -60,6 +56,5 @@ os.execute('cargo run --release "'..rie..'" --clip')
 
 show "Pasting..."
 g.paste(x, y, "or")
-show "Pasted. Run pattern at 8^2 or faster."
 
--- show(logs)
+show "Pasted. Run pattern at 8^2 or faster."
