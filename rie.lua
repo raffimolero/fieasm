@@ -4,7 +4,7 @@
 a script i used within golly to quickly compile a rie file *into clipboard*
 and paste the output from the clipboard right into the Turing Machine's ROM
 
-open golly/FlipIfElse.mc (MC, not RIE) or 
+open "golly/Turing Machine.mc" or "golly/FlipIfElse.mc" (MC, not RIE)
 then open/run this script through Golly itself
 it should open up a terminal showing the compiler output
 just press enter when it appears, or something
