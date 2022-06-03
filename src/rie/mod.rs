@@ -8,9 +8,7 @@ use self::{
     rie_line::{RieLine, RieLineErr},
     tm_cmd::TMCmd,
 };
-use crate::helpers::{
-    ask_y_n, break_string, extend_vec_to, largest_bit, pause, RED, RESET, YELLOW,
-};
+use crate::helpers::{ask_y_n, break_string, extend_vec_to, largest_bit, RESET, YELLOW};
 use std::{
     fmt::Display,
     fs::File,
@@ -166,8 +164,8 @@ impl TryFrom<File> for RieProgram {
             if extension > warning_size {
                 let total_cmds = 2 << largest_bit(extension);
                 eprintln!(
-                    "{RED}WAIT!{RESET}\n\
-                    The program is trying to create at least {RED}{total_cmds} instructions.{RESET}\n\
+                    "{YELLOW}WAIT!{RESET}\n\
+                    The program is trying to create at least {YELLOW}{total_cmds} instructions.{RESET}\n\
                     This is coming from line {line}, which specifies that state {state} must goto {}.\n\
                     Are you sure you want a machine with that many instructions? I will notify you if it goes beyond another power of two.",
                     tm_cmd.goto

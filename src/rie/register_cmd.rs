@@ -4,7 +4,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 #[error(
     "{0} is not a register command.\n\
-        Valid commands: {:?}",
+    Valid commands: {:?}",
     RegisterCmd::VALID_COMMANDS.map(|(token, _cmd)| token),
 )]
 pub struct BadRegisterCmd(String);

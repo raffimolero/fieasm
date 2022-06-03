@@ -105,6 +105,7 @@ pub fn ask_y_n() -> bool {
         match get_line().trim().to_uppercase().chars().next() {
             Some('Y') => return true,
             Some('N') => return false,
+            None => return false,
             _ => {}
         }
     }

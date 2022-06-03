@@ -111,16 +111,18 @@ pub fn run_cli() -> Result<(), CLIErr> {
         eprintln!("RLE sent to standard output.");
     }
 
-    // eprintln!("Would you like to view the program's representation?");
-    // eprintln!("({YELLOW}{} lines of code{RESET})", program_ir.len());
-    // if ask_y_n() {
-    //     for (i, line) in program_ir.to_string().split('\n').enumerate() {
-    //         eprintln!("{line}");
-    //         if i % 8 == 0 {
-    //             pause()
-    //         }
-    //     }
-    // }
+    eprintln!("Would you like to view the program's representation?");
+    eprintln!("({YELLOW}{} lines of code{RESET})", program_ir.len());
+    if ask_y_n() {
+        for (i, line) in program_ir.to_string().split('\n').enumerate() {
+            eprintln!("{line}");
+            if i % 8 == 0 {
+                pause()
+            }
+        }
+        eprintln!("End.");
+        pause()
+    }
 
     Ok(())
 }
