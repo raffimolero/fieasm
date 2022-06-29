@@ -25,7 +25,7 @@ A program that converts `.rie` files into RLEs to paste into Golly.
 
     ---
 
-5. Go back to your terminal and type `cargo run program --clip`. This will first compile the rieasm assembler, which will then run, compiling the `program.rie` file found in this repository into your clipboard.
+5. Go back to your terminal and type `cargo run program --clip`. This will first compile the rieasm assembler, which will then run, compiling the `program.rie` file found in this repository into your clipboard. (This is outdated btw there's a lua script somewhere that will compile the rieasm into your clipboard and paste it in the proper location automatically)
     <details>
     <summary>(Show Image)</summary>
 
