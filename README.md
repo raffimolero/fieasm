@@ -7,6 +7,8 @@ A program that converts `.rie` files into RLEs to paste into Golly.
 <details>
 <summary>Instructions</summary>
 
+(outdated summary)
+
 1. make sure you have [Golly](https://sourceforge.net/projects/golly/files/) and [Rust](https://www.rust-lang.org/tools/install) installed.
 
 2. Clone this repo.
@@ -112,29 +114,35 @@ A tab width of 8 is recommended, but feel free to use tab width 4 if you like wo
 
 The first real line of `.rie` code inside of the file is a header and must look like this:
 ```
-        state   arg     goto    read    reg     reg     reg
+        STATE   ARG     GOTO    READ    REG     REG     REG     ARM
 ```
 
 with 0 or more `reg` columns. In this case, 3.
 The number of `reg` columns will specify how many registers the **target** Turing Machine model has.
+the `ARM` column is optional.
 
 The provided Turing Machine file has exactly **4 bits of state and 3 registers,** so unless you know how to mod the machine, **keep it at 3 registers.**
 
-As mentioned earlier for all `.rie` code, every token is preceded with tabs, as in `<tab>state<tab>arg<tab>goto<tab>read` and so on.
+As mentioned earlier for all `.rie` code, every token is preceded with tabs, as in `<tab>STATE<tab>ARG<tab>GOTO<tab>READ` and so on.
 
 Every valid line after the header must now stick to the format specified by the header:
 
-- `state` is required. It must be a nonnegative integer, and is what `goto` looks for when jumping to the next instruction.
-- `arg` is also required. It is always paired with state, and is where `read` and `reg '?'` go to when finding the next instruction.
-- `goto` jumps to the corresponding `state` after the current instruction finishes. defaults to the same value as `state`.
-- `read` acts as if a register read a bit and returned `true` or `false`.
-- `reg` instructions may either be omitted, or one of the following:
+- `STATE` is required. It must be a nonnegative integer, and is what `GOTO` looks for when jumping to the next instruction.
+- `ARG` is also required. It must be either `true` or `false`, is always paired with state, and is where `READ` and `REG '?'` go to when finding the next instruction.
+- `GOTO` jumps to the corresponding `STATE` after the current instruction finishes. defaults to the same value as `STATE`.
+- `READ` returns either `true` or `false` as the next `arg`.
+- `REG` instructions may either be omitted, or one of the following:
     - `>` Push register head one step to the right.
     - `<` Pull register head one step to the left.
     - `%` Flip the bit at the register head.
     - `%<` Executes `%` then `<`. This is the only "combination" of instructions.<sup>[1]</sup>
-    - `?` Reads the bit at the register head. This will become the next `arg`.
-- anything after the last `reg` is a comment.
+    - `?` Reads the bit at the register head. This will become the next `ARG`.
+- `ARM` instructions can be one of `2^4=16` combinations of the following, so long as they follow the order `<>C?`:
+    1. `<` Send a 2-long signal. Equivalent to `%<` for `REG`.
+    2. `>` Send a 1-long signal. The same instruction as in `REG`.
+    3. `C` Send a 3-long signal. Bends the construction arm. If `>` is already specified, `C` acts like `<`.
+    4. `?` Send a read signal to the arm. The same instruction as in `REG`.
+- anything after `ARM` (or the last `REG`, if there is no arm,) is a comment.
 
 There may only be at most one read. Having no reads will end the program.
 
