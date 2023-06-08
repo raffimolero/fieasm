@@ -1,5 +1,6 @@
 mod helpers;
 mod rie;
+mod rle;
 
 use crate::{
     helpers::{ask_y_n, find_file, pause, GREEN, RED, RESET, YELLOW},

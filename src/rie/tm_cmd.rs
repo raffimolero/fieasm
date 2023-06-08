@@ -1,4 +1,4 @@
-use super::register_cmd::RegisterCmd;
+use super::{arm_cmd::ArmCmd, header::HeaderFormat, register_cmd::RegisterCmd, Register};
 use crate::helpers::extend_vec_to;
 
 #[derive(Debug, Clone, Default)]
@@ -6,21 +6,13 @@ pub struct TMCmd {
     pub goto: u32,
     pub read: Option<bool>,
     pub register_cmds: Vec<RegisterCmd>,
+    pub arm_cmd: ArmCmd,
 }
 
 impl TMCmd {
-    pub fn assemble(&self, state_bit_count: u32, register_count: usize) -> Vec<Vec<bool>> {
+    pub fn assemble(&self, state_bit_count: u32, format: HeaderFormat) -> Vec<Vec<bool>> {
         // assemble register commands
-        let mut out = self
-            .register_cmds
-            .iter()
-            .map(|cmd| cmd.assemble().to_vec())
-            .collect();
-        extend_vec_to(&mut out, vec![false; 4], register_count);
-        out.reverse();
-
-        // assemble read
-        out.push(self.read.map_or(vec![false; 2], |bit| vec![!bit, bit]));
+        let mut out = vec![];
 
         // assemble jump mask
         let mut mask = self.goto;
@@ -30,6 +22,18 @@ impl TMCmd {
             mask >>= 1;
         }
         out.push(goto_bits);
+
+        // assemble read
+        out.push(self.read.map_or(vec![false; 2], |bit| vec![bit, !bit]));
+
+        // assemble register commands
+        out.extend(self.register_cmds.iter().map(|cmd| cmd.assemble().to_vec()));
+        extend_vec_to(&mut out, vec![false; 4], format.register_count + 2);
+
+        // assemble arm commands
+        if format.has_arm {
+            out.push(self.arm_cmd.assemble().to_owned().to_vec());
+        }
 
         out
     }

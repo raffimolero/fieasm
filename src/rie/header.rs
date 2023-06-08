@@ -22,21 +22,33 @@ pub enum HeaderErr {
     ExpectedHeader(String, String),
 
     #[error(
-        "This version of rieasm does not support the {0} header.\n\
-        The only valid headers are {}, and {}.",
-        HeaderFormat::PRIMARY_HEADERS.join(", "),
+        "Found a {0} header when only {} or {} were expected.",
         HeaderFormat::REGISTER_HEADER,
+        HeaderFormat::ARM_HEADER
     )]
-    UnsupportedHeader(String),
+    ExpectedRegister(String),
+
+    #[error(
+        "You cannot put any registers after the {} header.",
+        HeaderFormat::ARM_HEADER
+    )]
+    RegisterAfterArm,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HeaderFormat {
     pub register_count: usize,
+    pub has_arm: bool,
 }
 
 impl HeaderFormat {
-    pub const PRIMARY_HEADERS: [&'static str; 4] = ["state", "arg", "goto", "read"];
-    pub const REGISTER_HEADER: &'static str = "reg";
+    pub const PRIMARY_HEADERS: [&'static str; 4] = ["STATE", "ARG", "GOTO", "READ"];
+    pub const REGISTER_HEADER: &'static str = "REG";
+    pub const ARM_HEADER: &'static str = "ARM";
+
+    pub fn column_height(&self, state_bits: u32) -> usize {
+        state_bits as usize + 2 + self.register_count * 4 + self.has_arm as usize * 4
+    }
 }
 
 impl FromStr for HeaderFormat {
@@ -59,14 +71,21 @@ impl FromStr for HeaderFormat {
         }
 
         // Count register headers
-        let mut register_count = 0;
-        for token in tokens {
-            if token != Self::REGISTER_HEADER {
-                return Err(UnsupportedHeader(token.to_owned()));
+        let mut this = Self {
+            register_count: 0,
+            has_arm: false,
+        };
+        while let Some(token) = tokens.next() {
+            match token {
+                Self::REGISTER_HEADER => this.register_count += 1,
+                Self::ARM_HEADER => this.has_arm = true,
+                _ => return Err(ExpectedRegister(token.to_owned())),
             }
-            register_count += 1;
+        }
+        if tokens.next().is_some() {
+            return Err(RegisterAfterArm);
         }
 
-        Ok(HeaderFormat { register_count })
+        Ok(this)
     }
 }

@@ -1,8 +1,13 @@
 use super::{
+    arm_cmd::BadArmCmd,
+    header::HeaderFormat,
     register_cmd::{BadRegisterCmd, RegisterCmd},
     tm_cmd::TMCmd,
 };
-use crate::helpers::{get_tokens, next_token};
+use crate::{
+    helpers::{get_tokens, next_token},
+    rie::arm_cmd::ArmCmd,
+};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -10,7 +15,10 @@ pub enum RieLineErr {
     #[error("There was a tab, indicating a real line, but no state was specified.")]
     NoState,
 
-    #[error("Could not parse the 'state' ({0}).")]
+    #[error(
+        "Could not parse the 'state'.\n\
+        States must be non-negative integers, but I found {0:?}."
+    )]
     BadState(String),
 
     #[error(
@@ -38,7 +46,10 @@ pub enum RieLineErr {
     BadRead(String, u32, bool),
 
     #[error("Invalid command at State {0} with Arg {1} for Register {2}: {3}")]
-    BadCommand(u32, bool, usize, BadRegisterCmd),
+    BadRegisterCommand(u32, bool, usize, BadRegisterCmd),
+
+    #[error("Invalid command at State {0} with Arg {1} for Construction Arm: {2}")]
+    BadArmCommand(u32, bool, BadArmCmd),
 
     #[error(
         "Attempt to read from multiple sources at State {0} with Arg {1}.\n\
@@ -57,8 +68,15 @@ impl RieLine {
     pub fn to_string(state_digits: usize, state: u32, arg: bool, cmd: &TMCmd) -> String {
         let mut instructions = vec![format!("Goto {:>state_digits$}", cmd.goto)];
 
+        #[derive(Debug, PartialEq)]
+        enum ReadSource {
+            Constant(bool),
+            Register(usize),
+            Arm,
+        }
+
         // which register this command reads from, if any
-        let mut read_register_id = None;
+        let mut read_from = cmd.read.map(ReadSource::Constant);
 
         // list every register command
         for (i, &cmd) in cmd
@@ -69,22 +87,31 @@ impl RieLine {
         {
             if cmd == RegisterCmd::Read {
                 debug_assert_eq!(
-                    read_register_id, None,
+                    read_from.replace(ReadSource::Register(i)),
+                    None,
                     "A TMCmd somehow ended up having multiple reads."
                 );
-                read_register_id = Some(i);
                 continue;
             }
             instructions.push(format!("{cmd:?} Register {i}"));
         }
 
+        if cmd.arm_cmd.0[ArmCmd::READ] {
+            debug_assert_eq!(
+                read_from.replace(ReadSource::Arm),
+                None,
+                "A TMCmd somehow ended up having multiple reads."
+            );
+        }
+
         // list which source to read from for the next command
-        if let Some(read) = cmd
-            .read
-            .map(|x| x.to_string())
-            .or_else(|| read_register_id.map(|x| format!("Register {x}")))
-        {
-            instructions.push(format!("Read {read}"));
+        if let Some(source) = read_from {
+            let source = match source {
+                ReadSource::Constant(val) => format!("Constant {val}"),
+                ReadSource::Register(id) => format!("Register {id}"),
+                ReadSource::Arm => "Construction Arm".to_string(),
+            };
+            instructions.push(format!("Read from {source}"));
         }
 
         // compile all instructions in the list
@@ -94,29 +121,37 @@ impl RieLine {
         )
     }
 
-    pub fn parse(line: &str, register_count: usize) -> Result<Self, RieLineErr> {
+    pub fn parse(line: &str, format: HeaderFormat) -> Result<Self, RieLineErr> {
         use RieLineErr::*;
 
-        let tokens = &mut get_tokens(line);
-        let state = next_token(tokens, BadState)?.ok_or(NoState)?;
-        let arg = next_token(tokens, |token| BadArg(token, state))?.ok_or(NoArg(state))?;
-        let goto = next_token(tokens, |token| BadJump(token, state, arg))?.unwrap_or(state);
-        let read = next_token(tokens, |token| BadRead(token, state, arg))?;
+        let mut tokens = get_tokens(line);
+        let state = next_token(&mut tokens, |_, token| BadState(token))?.ok_or(NoState)?;
+        let arg = next_token(&mut tokens, |_, token| BadArg(token, state))?.ok_or(NoArg(state))?;
+        let goto = next_token(&mut tokens, |_, token| BadJump(token, state, arg))?.unwrap_or(state);
+        let read = next_token(&mut tokens, |_, token| BadRead(token, state, arg))?;
 
         let mut register_cmds = vec![];
-        for (i, token) in (0..register_count).zip(tokens) {
+        for (i, token) in (0..format.register_count).zip(&mut tokens) {
             register_cmds.push(
                 token
                     .parse::<RegisterCmd>()
-                    .map_err(|e| BadCommand(state, arg, i, e))?,
+                    .map_err(|e| BadRegisterCommand(state, arg, i, e))?,
             );
         }
+
+        let arm_cmd: ArmCmd = format
+            .has_arm
+            .then(|| next_token(&mut tokens, |e, _| BadArmCommand(state, arg, e)))
+            .transpose()?
+            .flatten()
+            .unwrap_or_default();
 
         let read_count = register_cmds
             .iter()
             .filter(|&cmd| *cmd == RegisterCmd::Read)
             .count()
-            + read.is_some() as usize;
+            + read.is_some() as usize
+            + arm_cmd.0[ArmCmd::READ] as usize;
 
         if read_count > 1 {
             return Err(MultiRead(state, arg));
@@ -126,6 +161,7 @@ impl RieLine {
             goto,
             read,
             register_cmds,
+            arm_cmd,
         };
 
         Ok(Self { state, arg, cmd })

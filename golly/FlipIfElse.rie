@@ -9,10 +9,9 @@
 -- jump interpretation:
 --   -1, +0, -2, +1, -3, +2
 
-
 --	header:				prog	bit	temp	mem
-	state	arg	goto	read	reg	reg	reg	reg
-	0	false	31	false					-- entry point
+	STATE	ARG	GOTO	READ	REG	REG	REG	REG
+	 0	false	31	false					-- entry point
 
 -- count mem jumps
 	31	false	30		?	%
@@ -72,3 +71,4 @@
 
 	12	false	31	false
 	12	true	31	false		%
+

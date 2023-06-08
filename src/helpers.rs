@@ -45,21 +45,22 @@ pub fn get_tokens(line: &str) -> impl Iterator<Item = &str> {
         line.starts_with(|c: char| c.is_whitespace()),
         "Tried to parse a comment as a line of code."
     );
-    line.trim().split('\t')
+    line.split('\t').skip(1)
 }
 
 pub fn next_token<'a, 'b, T: FromStr, E>(
     token_iter: &'a mut impl Iterator<Item = &'b str>,
-    bad_token: impl Fn(String) -> E,
+    bad_token: impl Fn(T::Err, String) -> E,
 ) -> Result<Option<T>, E> {
     token_iter
         .next()
         .filter(|token| !token.is_empty())
         .map_or(Ok(None), |token| {
             token
+                .trim()
                 .parse()
                 .map(Some)
-                .map_err(|_| bad_token(token.to_owned()))
+                .map_err(|e| bad_token(e, token.to_owned()))
         })
 }
 

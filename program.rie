@@ -5,29 +5,29 @@
 -- the first 4 must come in exact order, followed by however many register headers.
 	state	arg	goto	read	reg	reg	reg
 
--- demo register 0
+-- demo register 0                    
 	 0	false		true	%<
-	 0	true	1	false	>
+	 0	true	 1	false	>
 	 1	false			?
-	 1	true	2	false	%
+	 1	true	 2	false	%
 	 2	false		true	>
-	 2	true	3		?
+	 2	true	 3		?
 	 3	false		true	<
-	 3	true	4	false
+	 3	true	 4	false
 
-# demo register 1
+-- demo register 1
 	 4	false		true		%<
-	 4	true	5	false		>
+	 4	true	 5	false		>
 	 5	false				?
-	 5	true	6	false		%
+	 5	true	 6	false		%
 	 6	false		true		>
-	 6	true	7			?
+	 6	true	 7			?
 	 7	false		true		<
-	 7	true	8	false
+	 7	true	 8	false
 
-# demo register 2
+-- demo register 2
 	 8	false		true			%<
-	 8	true	9	false			>
+	 8	true	 9	false			>
 	 9	false					?
 	 9	true	10	false			%
 	10	false		true			>
@@ -35,7 +35,7 @@
 	11	false		true			<
 	11	true	12	false
 
-# demo all three registers at once
+-- demo all three registers at once
 	12	false		true	%<	%<	%<
 	12	true	13	false	>	>	>
 	13	false		true	%	%	%
@@ -43,6 +43,6 @@
 	14	false		true	<	<	<
 	14	true	15	false
 
-# loop back to start
+-- loop back to start
 	15	false		true
-	15	true	0	false
+	15	true	 0	false

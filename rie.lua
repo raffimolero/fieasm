@@ -35,7 +35,7 @@ local function rom_location()
 		return 0, 0
 	else
 		show "Pattern found. Assuming it is a turing machine without question."
-		return { rect[1] + 4, rect[2] + 5 }
+		return rect[1] + 4, rect[2] + 5
 	end
 end
 
