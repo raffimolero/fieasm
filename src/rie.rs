@@ -15,6 +15,7 @@ use crate::{
     rle::Rle,
 };
 use std::{
+    arch::x86_64::_SIDD_BIT_MASK,
     fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader},
@@ -54,7 +55,7 @@ pub enum RieErr {
 pub struct RieProgram {
     commands: Vec<[TMCmd; 2]>,
     format: HeaderFormat,
-    state_bits: u32,
+    state_bits: usize,
     // TODO: add support for putting data in
     // data: Vec<Vec<bool>>,
 }
@@ -73,10 +74,115 @@ impl RieProgram {
             .collect()
     }
 
+    fn build_rom(rom_column_bits: usize, rom_data: Vec<[Vec<Vec<bool>>; 2]>) -> Rle {
+        // // actual rom size
+        // let rom_height = rom_column_bits * 4;
+        let rom_true = "x = 5, y = 4, rule = Flow6
+                .A$5A$.A.B$.3A!"
+            .parse::<Rle>()
+            .unwrap();
+        let rom_false = "x = 5, y = 4, rule = Flow6
+                .A$5A$.A.C$.3A!"
+            .parse::<Rle>()
+            .unwrap();
+        let rom_pad = "x = 1, y = 4, rule = Flow6
+                !"
+        .parse::<Rle>()
+        .unwrap();
+        let rom_row = "x = 1, y = 4, rule = Flow6
+                $A!"
+        .parse::<Rle>()
+        .unwrap();
+
+        let mut out = Rle::default();
+
+        let mut indent = Rle::new_indent(0, 4);
+        for i in 0..rom_column_bits {
+            out.stack(&indent);
+            indent += &rom_pad;
+        }
+        let mut column = Rle::default();
+        // data (-> pairs ->) columns (-> registers ->) bits
+        for column_bits in rom_data.iter().flatten().rev() {
+            column.clear();
+            for tile in column_bits.iter().flatten().copied() {
+                column.stack(if tile { &rom_true } else { &rom_false });
+            }
+            out += &column;
+        }
+
+        out
+    }
+
+    fn build_demux(len: usize, state_bits: usize, rom_column_bits: usize) -> Rle {
+        // max command id that the demux needs to support
+        let demux_max = len * 2;
+        let demux_height = (state_bits + 1) * 5 + 3;
+        let demux_width = len * 5;
+        // physical location of the left edge of the demux
+        let demux_left_edge = rom_column_bits - 2;
+        // // just beyond the right edge of the demux
+        // let demux_right_edge = demux_left_edge + demux_width;
+
+        let demux_true = "x = 5, y = 5, rule = Flow6
+            .A.A$5A$2A.A$.2A.A$2.C2A!"
+            .parse::<Rle>()
+            .unwrap();
+        let demux_false = "x = 5, y = 5, rule = Flow6
+            .A.A$5A$2A.A$.2A.A$2.B2A!"
+            .parse::<Rle>()
+            .unwrap();
+        let demux_bottom = "x = 5, y = 3, rule = Flow6
+            3.A$2.2A$5A!"
+            .parse::<Rle>()
+            .unwrap();
+
+        let mut out = Rle::new_indent(demux_left_edge, demux_height);
+
+        let mut column = Rle::default();
+        for address in (0..demux_max).rev() {
+            column.clear();
+            for b in (0..state_bits + 1).rev() {
+                column.stack(if ((address >> b) & 1) != 0 {
+                    &demux_true
+                } else {
+                    &demux_false
+                });
+            }
+            column.stack(&demux_bottom);
+            out += &column;
+        }
+
+        // let demux_catch = "x = 7, y = 5, rule = Flow6
+        //     .3A.A$A2.3A$.A2.A$2.5A$4.A!"
+        //     .parse::<Rle>()
+        //     .unwrap();
+        // let demux_catch_bend = "x = 2, y = 5, rule = Flow6
+        //     A$A$A$A!"
+        //     .parse::<Rle>()
+        //     .unwrap();
+        // let demux_column = "x = 3, y = 5, rule = Flow6
+        //     .A$.A$.A$.A$.A!"
+        //     .parse::<Rle>()
+        //     .unwrap();
+        // let demux_row = "x = 2, y = 5, rule = Flow6
+        //     3$2A!"
+        //     .parse::<Rle>()
+        //     .unwrap();
+        // let activation = "x = 22, y = 2, rule = Flow6
+        //     A.A2.EBA$3A!"
+        //     .parse::<Rle>()
+        //     .unwrap();
+        // let demux_catch_final = "x = 7, y = 3, rule = Flow6
+        //     .3A.A$.A.3A$.A2.A!"
+        //     .parse::<Rle>()
+        //     .unwrap();
+
+        out
+    }
+
     pub fn rle(&self) -> String {
         let rom_data = self.assemble();
-        let mut TEST = ArmCmd::rle();
-        TEST += register_cmd::RegisterCmd::rle();
         // println!("{TEST:?}");
         // println!("{TEST}");
 
@@ -85,82 +191,21 @@ impl RieProgram {
 
         // how many bits per rom column
         let rom_column_bits = self.format.column_height(self.state_bits);
-        // actual rom size
-        let rom_height = rom_column_bits * 4;
-        let rom_true = "x = 5, y = 4, rule = Flow6
-            .A$5A$.A.B$.3A!"
-            .parse::<Rle>()
-            .unwrap();
-        let rom_false = "x = 5, y = 4, rule = Flow6
-            .A$5A$.A.C$.3A!"
-            .parse::<Rle>()
-            .unwrap();
-        let rom_pad = "x = 1, y = 4, rule = Flow6
-            !"
-        .parse::<Rle>()
-        .unwrap();
-        let rom_row = "x = 1, y = 4, rule = Flow6
-            $A!"
-        .parse::<Rle>()
-        .unwrap();
 
-        // max command id that the demux needs to support
-        let demux_max = len - 1;
-        let demux_height = self.state_bits as usize * 5;
-        let demux_width = len * 5;
-        // physical location of the left edge of the demux
-        let demux_left_edge = rom_column_bits - 2;
-        // exclusive
-        let demux_right_edge = demux_left_edge + demux_width;
+        let mut machine = Rle::default();
+        machine.stack(&Self::build_rom(rom_column_bits, rom_data));
+        machine.stack(&Self::build_demux(len, self.state_bits, rom_column_bits));
 
-        todo!("just manually specify the run lengths please");
+        machine.to_string()
+        // let machine_height = rom_height + demux_height + 5;
+        // let mut lines: Vec<String> = Vec::with_capacity(machine_height);
 
-        let demux_true = "x = 5, y = 5, rule = Flow6
-            .A.A$5A$2A.A$.2A.A$2.B2A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_false = "x = 5, y = 5, rule = Flow6
-            .A.A$5A$2A.A$.2A.A$2.C2A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_catch = "x = 7, y = 5, rule = Flow6
-            .3A.A$A2.3A$.A2.A$2.5A$4.A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_catch_bend = "x = 2, y = 5, rule = Flow6
-            A$A$A$A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_column = "x = 3, y = 5, rule = Flow6
-            .A$.A$.A$.A$.A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_row = "x = 2, y = 5, rule = Flow6
-            3$2A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_bottom = "x = 5, y = 3, rule = Flow6
-            3.A$2.2A$5A!"
-            .parse::<Rle>()
-            .unwrap();
-        let activation = "x = 22, y = 2, rule = Flow6
-            A.A2.EBA$3A!"
-            .parse::<Rle>()
-            .unwrap();
-        let demux_catch_final = "x = 7, y = 3, rule = Flow6
-            .3A.A$.A.3A$.A2.A!"
-            .parse::<Rle>()
-            .unwrap();
+        // // distance from end of 'read false' rom bit to 'read true' column
+        // let mut read_distance = 6 + self.state_bits as usize * 3;
 
-        let machine_height = rom_height + demux_height + 5;
-        let mut lines: Vec<String> = Vec::with_capacity(machine_height);
-
-        // distance from end of 'read false' rom bit to 'read true' column
-        let mut read_distance = 6 + self.state_bits as usize * 3;
-
-        // create a vec of lines in the same format as a column
-        let mut row = 0;
-        let first_column = &rom_data[0][false as usize];
+        // // create a vec of lines in the same format as a column
+        // let mut row = 0;
+        // let first_column = &rom_data[0][false as usize];
 
         //     let mut lines = first_column
         //         .iter()
@@ -228,7 +273,6 @@ impl RieProgram {
         //             69
         //         )
         //     )
-        todo!()
     }
 }
 
@@ -257,7 +301,7 @@ impl TryFrom<File> for RieProgram {
         // let mut highest_state = 0;
         let mut commands = vec![];
         let mut add_cmd = |line: usize,
-                           state: u32,
+                           state: usize,
                            arg: bool,
                            tm_cmd: TMCmd|
          -> Result<(), RieErr> {
@@ -308,12 +352,12 @@ impl TryFrom<File> for RieProgram {
             // }
         }
 
-        let state_bits = largest_bit(commands.len() - 1);
         // extend_vec_to(
         //     &mut commands,
         //     [TMCmd::default(), TMCmd::default()],
         //     1 << state_bits,
         // );
+        let state_bits = largest_bit(commands.len() - 1);
 
         Ok(RieProgram {
             commands,
@@ -339,8 +383,8 @@ impl Display for RieProgram {
             writeln!(
                 f,
                 "{}\n{}",
-                RieLine::to_string(state_digits, state as u32, false, cmd0),
-                RieLine::to_string(state_digits, state as u32, true, cmd1),
+                RieLine::to_string(state_digits, state, false, cmd0),
+                RieLine::to_string(state_digits, state, true, cmd1),
             )?;
         }
         Ok(())

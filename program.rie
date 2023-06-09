@@ -3,7 +3,7 @@
 
 -- each program starts with a header.
 -- the first 4 must come in exact order, followed by however many register headers.
-	state	arg	goto	read	reg	reg	reg
+	STATE	ARG	GOTO	READ	REG	REG	REG
 
 -- demo register 0                    
 	 0	false		true	%<

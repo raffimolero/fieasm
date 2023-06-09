@@ -78,8 +78,8 @@ pub fn break_string(string: &str, max_line_length: usize) -> String {
         .join("\n")
 }
 
-pub fn largest_bit(n: usize) -> u32 {
-    usize::BITS - n.leading_zeros()
+pub fn largest_bit(n: usize) -> usize {
+    (usize::BITS - n.leading_zeros()) as usize
 }
 
 pub fn print_flush(message: &str) {

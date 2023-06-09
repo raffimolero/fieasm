@@ -25,47 +25,47 @@ pub enum RieLineErr {
         "State {0} has no arg.\n\
         Please specify an arg of true or false."
     )]
-    NoArg(u32),
+    NoArg(usize),
 
     #[error(
         "Could not parse the 'arg' for State {1}.\n\
         Args must be either true or false, but I found {0:?}."
     )]
-    BadArg(String, u32),
+    BadArg(String, usize),
 
     #[error(
         "Could not parse the 'jump' for State {1} with Arg {2}.\n\
         Jumps must be non-negative integers, but I found {0:?}."
     )]
-    BadJump(String, u32, bool),
+    BadJump(String, usize, bool),
 
     #[error(
         "Could not parse the 'read' for State {1} with Arg {2}.\n\
         Reads must be either true or false, but I found {0:?}."
     )]
-    BadRead(String, u32, bool),
+    BadRead(String, usize, bool),
 
     #[error("Invalid command at State {0} with Arg {1} for Register {2}: {3}")]
-    BadRegisterCommand(u32, bool, usize, BadRegisterCmd),
+    BadRegisterCommand(usize, bool, usize, BadRegisterCmd),
 
     #[error("Invalid command at State {0} with Arg {1} for Construction Arm: {2}")]
-    BadArmCommand(u32, bool, BadArmCmd),
+    BadArmCommand(usize, bool, BadArmCmd),
 
     #[error(
         "Attempt to read from multiple sources at State {0} with Arg {1}.\n\
         There must only be at most 1 read per command."
     )]
-    MultiRead(u32, bool),
+    MultiRead(usize, bool),
 }
 
 pub struct RieLine {
-    pub state: u32,
+    pub state: usize,
     pub arg: bool,
     pub cmd: TMCmd,
 }
 
 impl RieLine {
-    pub fn to_string(state_digits: usize, state: u32, arg: bool, cmd: &TMCmd) -> String {
+    pub fn to_string(state_digits: usize, state: usize, arg: bool, cmd: &TMCmd) -> String {
         let mut instructions = vec![format!("Goto {:>state_digits$}", cmd.goto)];
 
         #[derive(Debug, PartialEq)]

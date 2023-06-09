@@ -38,10 +38,10 @@ impl Register<4> for RegisterCmd {
         use RegisterCmd::*;
         match self {
             Noop => [false; 4],
-            Push => [false, true, false, false],
-            Pull => [false, false, true, false],
-            Flip => [false, true, true, true],
-            FlipPull => [false, false, true, true],
+            Push => [false, false, true, false],
+            Pull => [false, true, false, false],
+            Flip => [true, true, true, false],
+            FlipPull => [true, true, false, false],
             Read => [true, false, false, true],
         }
     }

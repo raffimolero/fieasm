@@ -46,7 +46,7 @@ impl HeaderFormat {
     pub const REGISTER_HEADER: &'static str = "REG";
     pub const ARM_HEADER: &'static str = "ARM";
 
-    pub fn column_height(&self, state_bits: u32) -> usize {
+    pub fn column_height(&self, state_bits: usize) -> usize {
         state_bits as usize + 2 + self.register_count * 4 + self.has_arm as usize * 4
     }
 }
